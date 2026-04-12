@@ -1,0 +1,21 @@
+# Backend
+neartask-backend/target/
+neartask-backend/.mvn/
+neartask-backend/*.class
+
+# Frontend
+neartask-frontend/node_modules/
+neartask-frontend/build/
+
+# Environment
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
