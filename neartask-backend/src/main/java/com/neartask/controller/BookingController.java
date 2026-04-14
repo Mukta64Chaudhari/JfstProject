@@ -19,45 +19,62 @@ public class BookingController {
     private final UserRepository userRepo;
 
     @PostMapping("/accept")
-    public ResponseEntity<Booking> acceptTask(@RequestParam Long taskId,
-                                               @RequestParam Long workerId) {
-        Task task = taskRepo.findById(taskId).orElseThrow();
-        User worker = userRepo.findById(workerId).orElseThrow();
+    public ResponseEntity<?> acceptTask(@RequestParam Long taskId,
+                                        @RequestParam Long workerId) {
+        try {
+            Task task = taskRepo.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
 
-        Booking booking = Booking.builder()
-            .task(task)
-            .worker(worker)
-            .status("ACCEPTED")
-            .acceptedAt(LocalDateTime.now())
-            .build();
+            User worker = userRepo.findById(workerId)
+                .orElseThrow(() -> new RuntimeException("Worker not found"));
 
-        task.setStatus("ASSIGNED");
-        task.setAssignedTo(worker);
-        taskRepo.save(task);
+            if (!task.getStatus().equals("OPEN")) {
+                return ResponseEntity.badRequest().body("Task is no longer available");
+            }
 
-        return ResponseEntity.ok(bookingRepo.save(booking));
+            Booking booking = Booking.builder()
+                .task(task)
+                .worker(worker)
+                .status("ACCEPTED")
+                .acceptedAt(LocalDateTime.now())
+                .build();
+
+            task.setStatus("ASSIGNED");
+            task.setAssignedTo(worker);
+            taskRepo.save(task);
+
+            return ResponseEntity.ok(bookingRepo.save(booking));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/complete")
-    public ResponseEntity<Booking> completeBooking(@PathVariable Long id) {
-        Booking booking = bookingRepo.findById(id).orElseThrow();
-        booking.setStatus("COMPLETED");
-        booking.setCompletedAt(LocalDateTime.now());
+    public ResponseEntity<?> completeBooking(@PathVariable Long id) {
+        try {
+            Booking booking = bookingRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        Task task = booking.getTask();
-        task.setStatus("COMPLETED");
-        taskRepo.save(task);
+            booking.setStatus("COMPLETED");
+            booking.setCompletedAt(LocalDateTime.now());
 
-        return ResponseEntity.ok(bookingRepo.save(booking));
+            Task task = booking.getTask();
+            task.setStatus("COMPLETED");
+            taskRepo.save(task);
+
+            return ResponseEntity.ok(bookingRepo.save(booking));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/worker/{workerId}")
-    public List<Booking> getWorkerBookings(@PathVariable Long workerId) {
-        return bookingRepo.findByWorkerId(workerId);
+    public ResponseEntity<List<Booking>> getWorkerBookings(@PathVariable Long workerId) {
+        return ResponseEntity.ok(bookingRepo.findByWorkerId(workerId));
     }
 
     @GetMapping("/task/{taskId}")
-    public ResponseEntity<Booking> getTaskBooking(@PathVariable Long taskId) {
+    public ResponseEntity<?> getTaskBooking(@PathVariable Long taskId) {
         return bookingRepo.findByTaskId(taskId)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());

@@ -3,6 +3,7 @@ package com.neartask.controller;
 import com.neartask.model.User;
 import com.neartask.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,37 +17,53 @@ public class UserController {
     private final UserRepository userRepo;
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userRepo.findById(id).orElseThrow();
+    public ResponseEntity<?> getUser(@PathVariable Long id) {
+        return userRepo.findById(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/nearby")
-    public List<User> getNearbyWorkers(@RequestParam double lat,
-                                        @RequestParam double lng,
-                                        @RequestParam(defaultValue = "10") double radiusKm) {
-        return userRepo.findByRoleAndAvailableTrue("WORKER")
+    public ResponseEntity<List<User>> getNearbyWorkers(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "10") double radiusKm) {
+
+        List<User> workers = userRepo.findByRoleAndAvailableTrue("WORKER")
             .stream()
             .filter(w -> w.getLatitude() != null && w.getLongitude() != null)
             .filter(w -> haversine(lat, lng, w.getLatitude(), w.getLongitude()) <= radiusKm)
             .collect(Collectors.toList());
+
+        return ResponseEntity.ok(workers);
     }
 
     @PutMapping("/{id}/location")
-    public User updateLocation(@PathVariable Long id,
-                                @RequestParam double lat,
-                                @RequestParam double lng) {
-        User user = userRepo.findById(id).orElseThrow();
-        user.setLatitude(lat);
-        user.setLongitude(lng);
-        return userRepo.save(user);
+    public ResponseEntity<?> updateLocation(@PathVariable Long id,
+                                             @RequestParam double lat,
+                                             @RequestParam double lng) {
+        try {
+            User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setLatitude(lat);
+            user.setLongitude(lng);
+            return ResponseEntity.ok(userRepo.save(user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}/availability")
-    public User toggleAvailability(@PathVariable Long id,
-                                    @RequestParam boolean available) {
-        User user = userRepo.findById(id).orElseThrow();
-        user.setAvailable(available);
-        return userRepo.save(user);
+    public ResponseEntity<?> toggleAvailability(@PathVariable Long id,
+                                                 @RequestParam boolean available) {
+        try {
+            User user = userRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setAvailable(available);
+            return ResponseEntity.ok(userRepo.save(user));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
