@@ -22,6 +22,7 @@ public class Task {
     private Double latitude;
     private Double longitude;
     private String address;
+    private LocalDateTime scheduledAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "posted_by")

@@ -20,6 +20,7 @@ public class User {
     private String password;
     private String phone;
     private String role;        // "CUSTOMER" or "WORKER"
+    private String skill;       // worker service category
     private Double latitude;
     private Double longitude;
     private boolean available = true;

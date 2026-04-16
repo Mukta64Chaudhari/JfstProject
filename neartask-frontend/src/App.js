@@ -1,11 +1,12 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar     from './components/Navbar';
 import Login      from './pages/Login';
-import Register   from './pages/Register';
 import TaskBoard  from './pages/TaskBoard';
+import PostTask   from './pages/PostTask';
 import NearbyWorkers from './pages/NearbyWorkers';
-import Dashboard  from './pages/Dashboard';
+import MyTasks    from './pages/MyTasks';
+import Welcome    from './pages/Welcome';
 
 function PrivateRoute({ children }) {
     const { user } = useAuth();
@@ -13,15 +14,21 @@ function PrivateRoute({ children }) {
 }
 
 function AppRoutes() {
+    const location = useLocation();
+    const hideNavbar = location.pathname === '/login' || location.pathname === '/register';
+
     return (
         <>
-            <Navbar />
+            {!hideNavbar && <Navbar />}
             <Routes>
                 <Route path="/login"     element={<Login />} />
-                <Route path="/register"  element={<Register />} />
+                <Route path="/register"  element={<Navigate to="/login?mode=register" replace />} />
                 <Route path="/tasks"     element={<PrivateRoute><TaskBoard /></PrivateRoute>} />
+                <Route path="/post-task" element={<PrivateRoute><PostTask /></PrivateRoute>} />
                 <Route path="/nearby"    element={<PrivateRoute><NearbyWorkers /></PrivateRoute>} />
-                <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                <Route path="/my-tasks"  element={<PrivateRoute><MyTasks /></PrivateRoute>} />
+                <Route path="/dashboard" element={<Navigate to="/my-tasks" replace />} />
+                <Route path="/welcome"   element={<PrivateRoute><Welcome /></PrivateRoute>} />
                 <Route path="/"          element={<Navigate to="/tasks" />} />
             </Routes>
         </>
