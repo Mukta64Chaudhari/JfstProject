@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/JfstProject/static/css/main.64643f36.css",
+    "main.js": "/JfstProject/static/js/main.242b64c5.js",
+    "index.html": "/JfstProject/index.html",
+    "main.64643f36.css.map": "/JfstProject/static/css/main.64643f36.css.map",
+    "main.242b64c5.js.map": "/JfstProject/static/js/main.242b64c5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.64643f36.css",
+    "static/js/main.242b64c5.js"
+  ]
+}
